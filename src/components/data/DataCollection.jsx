@@ -1,99 +1,120 @@
 import React from "react";
+import SensorTable from "./SensorTable";
+import { Server, Activity, Database, ShieldCheck, Wifi } from "lucide-react";
 
 const DataCollection = ({ sensors, traffic, logs, history }) => {
-  // 🔹 Derived Stats
   const activeSensors = sensors.length;
   const totalData = history.length;
-  const dataRate = Math.min(1000 + totalData * 5, 5000); // simulated
+  const dataRate = Math.min(1000 + totalData * 5, 5000);
   const uptime = "99.8%";
 
+  const networkStats = [
+    {
+      label: "Active Nodes",
+      value: activeSensors,
+      icon: <Wifi size={18} />,
+      color: "text-emerald-500",
+      bg: "bg-emerald-50",
+    },
+    {
+      label: "Data Throughput",
+      value: `${dataRate} pkts/s`,
+      icon: <Activity size={18} />,
+      color: "text-blue-500",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "Server Uptime",
+      value: uptime,
+      icon: <Server size={18} />,
+      color: "text-indigo-500",
+      bg: "bg-indigo-50",
+    },
+    {
+      label: "Database Sync",
+      value: "Active",
+      icon: <Database size={18} />,
+      color: "text-purple-500",
+      bg: "bg-purple-50",
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* 🔹 STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white/5 p-4 rounded-xl">
-          <p className="text-sm text-gray-400">Active Sensors</p>
-          <h2 className="text-xl font-bold">{activeSensors}</h2>
-        </div>
-
-        <div className="bg-white/5 p-4 rounded-xl">
-          <p className="text-sm text-gray-400">Data Rate</p>
-          <h2 className="text-xl font-bold">{dataRate}/s</h2>
-        </div>
-
-        <div className="bg-white/5 p-4 rounded-xl">
-          <p className="text-sm text-gray-400">Uptime</p>
-          <h2 className="text-xl font-bold">{uptime}</h2>
-        </div>
-
-        <div className="bg-white/5 p-4 rounded-xl">
-          <p className="text-sm text-gray-400">Data Points</p>
-          <h2 className="text-xl font-bold">{totalData}</h2>
-        </div>
-      </div>
-
-      {/* 🔹 SENSOR TABLE */}
-      <div className="bg-white/5 p-4 rounded-xl overflow-x-auto">
-        <h3 className="mb-4 font-semibold">Sensor Network</h3>
-
-        <table className="w-full text-sm">
-          <thead className="text-gray-400 border-b border-white/10">
-            <tr>
-              <th className="text-left py-2">ID</th>
-              <th className="text-left py-2">Road</th>
-              <th className="text-left py-2">Type</th>
-              <th className="text-left py-2">Status</th>
-              <th className="text-left py-2">Battery</th>
-              <th className="text-left py-2">Vehicles</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {sensors.map((s) => {
-              const vehicles = traffic[s.road];
-
-              let statusColor = "text-green-400";
-              if (s.battery < 20) statusColor = "text-red-400";
-              else if (s.battery < 50) statusColor = "text-yellow-400";
-
-              return (
-                <tr key={s.id} className="border-b border-white/5">
-                  <td className="py-2">{s.id}</td>
-                  <td>{s.road}</td>
-                  <td>{s.type}</td>
-
-                  <td className={statusColor}>
-                    {s.battery < 20
-                      ? "Critical"
-                      : s.battery < 50
-                        ? "Warning"
-                        : "Online"}
-                  </td>
-
-                  <td>{Math.round(s.battery)}%</td>
-
-                  <td>{vehicles}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 🔹 LIVE STREAM */}
-      <div className="bg-white/5 p-4 rounded-xl">
-        <h3 className="mb-4 font-semibold">Live Data Stream</h3>
-
-        <div className="max-h-60 overflow-y-auto space-y-2 text-xs font-mono">
-          {logs.slice(0, 15).map((log, i) => (
-            <div key={i} className="bg-black/30 p-2 rounded">
-              {log}
+    <div className="space-y-8 animate-slide-up">
+      {/* 🚀 NETWORK STATUS GRID */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {networkStats.map((stat, i) => (
+          <div
+            key={i}
+            className="glass-card p-6 flex flex-col gap-4 border border-slate-100 hover:border-indigo-100 transition-colors"
+          >
+            <div
+              className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center shadow-sm`}
+            >
+              {stat.icon}
             </div>
-          ))}
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                {stat.label}
+              </p>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight mt-1">
+                {stat.value}
+              </h2>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 📊 SENSOR NETWORK & LOGS */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2">
+          <SensorTable sensors={sensors} />
+        </div>
+
+        <div className="xl:col-span-1 space-y-6">
+          <div className="glass-card p-6 h-full border border-slate-200/60 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-slate-900 rounded-lg text-white shadow-lg">
+                <ShieldCheck size={18} />
+              </div>
+              <h3 className="text-lg font-black text-slate-800 tracking-tight">
+                Security & Auth
+              </h3>
+            </div>
+            <div className="space-y-4">
+              <SecurityItem label="SSL Encryption" status="Active" />
+              <SecurityItem label="Node Authentication" status="Verified" />
+              <SecurityItem label="End-to-End Tunnel" status="Stable" />
+            </div>
+
+            <div className="mt-10 p-4 bg-indigo-50 rounded-2xl border border-indigo-100/50">
+              <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mb-2">
+                Network Health
+              </p>
+              <div className="h-2 w-full bg-white rounded-full overflow-hidden shadow-inner">
+                <div
+                  className="h-full bg-indigo-500 rounded-full"
+                  style={{ width: "94%" }}
+                ></div>
+              </div>
+              <p className="text-[10px] text-indigo-400 mt-2 font-medium italic">
+                Latency: 12ms (Optimized)
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
+const SecurityItem = ({ label, status }) => (
+  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100/50">
+    <span className="text-xs font-bold text-slate-600">{label}</span>
+    <span className="text-[10px] font-black uppercase text-emerald-600 px-2 py-1 bg-emerald-50 rounded-md tracking-tighter">
+      {status}
+    </span>
+  </div>
+);
 
 export default DataCollection;

@@ -1,97 +1,65 @@
 import React from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { AlertCircle, Zap } from "lucide-react";
 
-const SignalOverview = ({
-  currentGreen,
-  signalPhase,
-  traffic
-}) => {
-
-  // 🔹 Counts
+const SignalOverview = ({ currentGreen, signalPhase, traffic }) => {
   const green = currentGreen.length;
   const yellow = signalPhase === "YELLOW" ? 1 : 0;
   const red = 4 - green - yellow;
 
-  // 🔹 Peak Road
   const peakRoad = Object.keys(traffic).reduce((a, b) =>
-    traffic[a] > traffic[b] ? a : b
+    traffic[a] > traffic[b] ? a : b,
   );
-
-  const peakValue = traffic[peakRoad];
-
-  // 🔹 System Status
   const total = Object.values(traffic).reduce((a, b) => a + b, 0);
 
-  let status = "Smooth";
-  if (total > 80) status = "Heavy";
-  else if (total > 40) status = "Moderate";
+  let statusColor = "bg-emerald-100 text-emerald-700";
+  let statusText = "Smooth";
+  if (total > 80) {
+    statusText = "Heavy";
+    statusColor = "bg-rose-100 text-rose-700";
+  } else if (total > 40) {
+    statusText = "Moderate";
+    statusColor = "bg-amber-100 text-amber-700";
+  }
 
-  // 🔹 Chart data
   const data = [
     { name: "Green", value: green },
     { name: "Yellow", value: yellow },
-    { name: "Red", value: red }
+    { name: "Red", value: red },
   ];
 
-  const COLORS = ["#10b981", "#f59e0b", "#ef4444"];
+  const COLORS = ["#10b981", "#f59e0b", "#f43f5e"];
 
   return (
-    <div className="bg-white/5 p-5 rounded-xl space-y-4">
-
-      {/* 🔥 HEADER */}
+    <div className="glass-card p-6 space-y-6 flex flex-col h-full">
       <div className="flex justify-between items-center">
-        <h3 className="font-semibold text-lg">Signal Overview</h3>
-        <span className="text-xs text-gray-400">Live</span>
+        <h3 className="font-bold text-slate-800 uppercase tracking-wider text-xs">
+          Signal Distribution
+        </h3>
+        <span
+          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${statusColor}`}
+        >
+          {statusText}
+        </span>
       </div>
 
-      {/* 🔹 SIGNAL STATUS */}
-      <div className="flex justify-between text-sm">
-
-        <div>
-          <p className="text-gray-400">Phase</p>
-          <p className="font-bold">{signalPhase}</p>
+      <div className="w-full h-[200px] relative">
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-3xl font-black text-slate-800">
+            {signalPhase}
+          </span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Phase
+          </span>
         </div>
-
-        <div>
-          <p className="text-gray-400">Active</p>
-          <p className="font-bold">{currentGreen.join(", ")}</p>
-        </div>
-
-      </div>
-
-      {/* 🔹 COUNTS */}
-      <div className="flex justify-around text-sm">
-
-        <div className="text-center">
-          <p className="text-green-400 text-lg font-bold">{green}</p>
-          <p className="text-gray-400">Green</p>
-        </div>
-
-        <div className="text-center">
-          <p className="text-yellow-400 text-lg font-bold">{yellow}</p>
-          <p className="text-gray-400">Yellow</p>
-        </div>
-
-        <div className="text-center">
-          <p className="text-red-400 text-lg font-bold">{red}</p>
-          <p className="text-gray-400">Red</p>
-        </div>
-
-      </div>
-
-      {/* 🔹 CHART */}
-      <div className="w-full h-[180px]">
         <ResponsiveContainer>
           <PieChart>
             <Pie
               data={data}
-              innerRadius={45}
-              outerRadius={70}
+              innerRadius={65}
+              outerRadius={85}
+              cornerRadius={10}
+              paddingAngle={8}
               dataKey="value"
             >
               {data.map((entry, index) => (
@@ -102,19 +70,41 @@ const SignalOverview = ({
         </ResponsiveContainer>
       </div>
 
-      {/* 🔥 INSIGHTS */}
-      <div className="bg-white/5 p-3 rounded-lg text-sm space-y-1">
-
-        <p>
-          ⚠️ Peak Traffic: <span className="font-bold">{peakRoad}</span> ({peakValue})
-        </p>
-
-        <p>
-          📊 System Status: <span className="font-bold">{status}</span>
-        </p>
-
+      <div className="grid grid-cols-3 gap-2 py-4 border-y border-slate-100">
+        {data.map((item, i) => (
+          <div key={i} className="text-center">
+            <p className="text-xl font-bold" style={{ color: COLORS[i] }}>
+              {item.value}
+            </p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase leading-none">
+              {item.name}
+            </p>
+          </div>
+        ))}
       </div>
 
+      <div className="space-y-3">
+        <div className="p-4 bg-slate-50 rounded-2xl flex items-center gap-3">
+          <AlertCircle size={18} className="text-rose-500" />
+          <div className="text-sm">
+            <p className="text-slate-500 font-medium leading-none">Peak Road</p>
+            <p className="font-bold text-slate-800 mt-1">
+              Road {peakRoad} ({traffic[peakRoad]})
+            </p>
+          </div>
+        </div>
+        <div className="p-4 bg-indigo-50 rounded-2xl flex items-center gap-3">
+          <Zap size={18} className="text-indigo-500" />
+          <div className="text-sm">
+            <p className="text-slate-500 font-medium leading-none">
+              System Flow
+            </p>
+            <p className="font-bold text-indigo-700 mt-1">
+              {total} Active Vehicles
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
