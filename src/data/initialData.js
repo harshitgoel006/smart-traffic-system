@@ -1,14 +1,15 @@
 // initialData.js
 
-// Initial traffic data for all roads
+// Initial traffic data for all roads (4 roads now)
 export const initialTraffic = {
-  A: 0,
-  B: 0,
-  C: 0
+  A: 12,
+  B: 18,
+  C: 9,
+  D: 14
 };
 
 // Initial signal state
 export const initialSignal = {
   currentGreen: "A",
-  time: 20
+  time: 30 // thoda realistic default
 };

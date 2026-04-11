@@ -1,27 +1,41 @@
 import { getDensity } from "./densityLogic";
 
 export function getSignalDecision(traffic, waitingTime) {
-  let maxRoad = "A";
-  let maxPriority = traffic.A + waitingTime.A;
+  const groups = [
+    { roads: ["A", "C"], name: "A-C" },
+    { roads: ["B", "D"], name: "B-D" }
+  ];
 
-  ["B", "C"].forEach(road => {
-    let priority = traffic[road] + waitingTime[road];
+  let bestGroup = null;
+  let maxPriority = -1;
+
+  groups.forEach(group => {
+    const totalTraffic =
+      traffic[group.roads[0]] + traffic[group.roads[1]];
+
+    const totalWaiting =
+      waitingTime[group.roads[0]] + waitingTime[group.roads[1]];
+
+    const priority = totalTraffic * 2 + totalWaiting * 1.5;
 
     if (priority > maxPriority) {
       maxPriority = priority;
-      maxRoad = road;
+      bestGroup = group;
     }
   });
 
-  const density = getDensity(traffic[maxRoad]);
+  const density = getDensity(
+    traffic[bestGroup.roads[0]] +
+    traffic[bestGroup.roads[1]]
+  );
 
-  let time = 20;
-
-  if (density === "Medium") time = 40;
-  if (density === "High") time = 60;
+  let time =
+    density === "Low" ? 20 :
+    density === "Medium" ? 35 :
+    50;
 
   return {
-    road: maxRoad,
+    roads: bestGroup.roads,
     density,
     time
   };

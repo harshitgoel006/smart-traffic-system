@@ -1,178 +1,246 @@
 import { useState, useEffect } from "react";
-import { initialTraffic, initialSignal } from "../data/initialData";
+
+import { initialTraffic } from "../data/initialData";
+import { sensorsData } from "../data/sensorsData";
 import { getSignalDecision } from "../logic/signalLogic";
 
-// Components
-import Dashboard from "../components/Dashboard";
-import TrafficControls from "../components/TrafficControls";
-import TrafficLights from "../components/TrafficLights";
-import Analytics from "../components/Analytics";
-import RoadSimulation from "../components/RoadSimulation";
-
-// Icons (Assuming you use lucide-react)
-import { Activity } from "lucide-react";
+// 📊 Modules
+import Dashboard from "../components/dashboard/Dashboard";
+import DataCollection from "../components/data/DataCollection";
+import CameraFeed from "../components/detection/CameraFeed";
+import SignalControl from "../components/control/SignalControl";
+import Analytics from "../components/analytics/Analytics";
+import AdvancedCharts from "../components/analytics/AdvancedCharts";
+import Heatmap from "../components/analytics/Heatmap";
+import LiveLogs from "../components/analytics/LiveLogs";
 
 function Home() {
-  // 🚗 Traffic Data
+
+  const roads = ["A", "B", "C", "D"];
+
+  // 🔁 MODULE NAVIGATION
+  const [activeModule, setActiveModule] = useState("dashboard");
+
+  // 🔹 CORE STATE
   const [traffic, setTraffic] = useState(initialTraffic);
+  const [sensors, setSensors] = useState(sensorsData);
 
-  // 🚦 Signal State
-  const [currentGreen, setCurrentGreen] = useState(initialSignal.currentGreen);
-  const [timer, setTimer] = useState(initialSignal.time);
+  const [currentGreen, setCurrentGreen] = useState(["A", "C"]);
+  const [signalPhase, setSignalPhase] = useState("GREEN");
+  const [timer, setTimer] = useState(30);
 
-  // ⏳ Waiting Time
-  const [waitingTime, setWaitingTime] = useState({ A: 0, B: 0, C: 0 });
+  const [waitingTime, setWaitingTime] = useState({
+    A: 0, B: 0, C: 0, D: 0
+  });
 
-  // 📊 Analytics Data
   const [history, setHistory] = useState([]);
+  const [logs, setLogs] = useState([]);
 
-  // --- LOGIC (UNCHANGED) ---
-  function addVehicle(road) {
-    setTraffic(prev => ({ ...prev, [road]: prev[road] + 1 }));
-  }
+  // 🚦 SIGNAL UPDATE
+  const updateSignal = (emergencyRoad = null) => {
+    setSignalPhase("YELLOW");
 
-  function removeVehicle(road) {
-    setTraffic(prev => ({ ...prev, [road]: Math.max(0, prev[road] - 1) }));
-  }
+    setTimeout(() => {
+      if (emergencyRoad) {
+        setCurrentGreen([emergencyRoad]);
+        setTimer(30);
+      } else {
+        const decision = getSignalDecision(traffic, waitingTime);
+        setCurrentGreen(decision.roads);
+        setTimer(decision.time);
+      }
+      setSignalPhase("GREEN");
+    }, 2000);
+  };
 
-  function updateSignal(emergencyRoad = null) {
-    if (emergencyRoad) {
-      setCurrentGreen(emergencyRoad);
-      setTimer(60);
-      return;
-    }
-    const decision = getSignalDecision(traffic, waitingTime);
-    setCurrentGreen(decision.road);
-    setTimer(decision.time);
-    setHistory(prev => [
-      ...prev,
-      { ...traffic, road: decision.road, density: decision.density, time: decision.time, timestamp: Date.now() }
-    ]);
-  }
-
+  // 🔁 MAIN LOOP
   useEffect(() => {
-    if (timer <= 0) {
-      updateSignal();
-      return;
-    }
     const interval = setInterval(() => {
-      setTimer(prev => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timer]);
 
-  useEffect(() => {
-    const flow = setInterval(() => {
+      // traffic update
       setTraffic(prev => {
         let updated = { ...prev };
-        if (currentGreen === "A") updated.A = Math.max(0, prev.A - 2);
-        if (currentGreen === "B") updated.B = Math.max(0, prev.B - 2);
-        if (currentGreen === "C") updated.C = Math.max(0, prev.C - 2);
+
+        roads.forEach(r => {
+          updated[r] += Math.floor(Math.random() * 5);
+        });
+
+        currentGreen.forEach(r => {
+          updated[r] = Math.max(0, updated[r] - 6);
+        });
+
         return updated;
       });
-    }, 1000);
-    return () => clearInterval(flow);
-  }, [currentGreen]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
+      // timer logic
+      const isClear = currentGreen.every(r => traffic[r] < 10);
+
+      setTimer(prev => {
+        if (prev <= 1 || (isClear && prev < 10)) {
+          updateSignal();
+          return 0;
+        }
+        return prev - 1;
+      });
+
+      // waiting time
       setWaitingTime(prev => {
         let updated = { ...prev };
-        Object.keys(prev).forEach(road => {
-          if (road !== currentGreen) updated[road] += 1;
-          else updated[road] = 0;
+        roads.forEach(r => {
+          if (!currentGreen.includes(r)) updated[r] += 1;
+          else updated[r] = 0;
         });
         return updated;
       });
+
+      // history
+      setHistory(prev => {
+        const last = prev[prev.length - 1];
+        if (JSON.stringify(last) === JSON.stringify(traffic)) return prev;
+        return [...prev.slice(-30), { ...traffic }];
+      });
+
+      // logs
+      const maxRoad = Object.keys(traffic).reduce((a, b) =>
+        traffic[a] > traffic[b] ? a : b
+      );
+
+      const maxVal = traffic[maxRoad];
+
+      let msg =
+        maxVal > 40
+          ? `[ALERT] Heavy traffic on ${maxRoad}`
+          : maxVal > 20
+          ? `[WARN] Traffic rising on ${maxRoad}`
+          : `[INFO] Smooth flow`;
+
+      setLogs(prev => [
+        `${new Date().toLocaleTimeString()} ${msg}`,
+        ...prev.slice(0, 20)
+      ]);
+
     }, 1000);
+
     return () => clearInterval(interval);
   }, [currentGreen]);
 
+  // 🔋 SENSOR BATTERY UPDATE
   useEffect(() => {
     const interval = setInterval(() => {
-      setTraffic(prev => ({
-        A: prev.A + Math.floor(Math.random() * 3),
-        B: prev.B + Math.floor(Math.random() * 3),
-        C: prev.C + Math.floor(Math.random() * 3)
-      }));
-    }, 3000);
+      setSensors(prev =>
+        prev.map(s => {
+          let b = Math.max(5, s.battery - Math.random() * 2);
+          return { ...s, battery: b };
+        })
+      );
+    }, 4000);
+
     return () => clearInterval(interval);
   }, []);
 
-  function handleEmergency(road) {
+  // 🚨 EMERGENCY
+  const handleEmergency = (road) => {
     updateSignal(road);
-  }
-  // --- END LOGIC ---
+  };
+
+  // 🎯 RENDER MODULE
+  const renderModule = () => {
+
+    switch (activeModule) {
+
+      case "dashboard":
+        return (
+          <Dashboard
+            traffic={traffic}
+            history={history}
+            currentGreen={currentGreen}
+            signalPhase={signalPhase}
+            congestion={Math.min((Object.values(traffic).reduce((a, b) => a + b, 0) / 150) * 100, 100).toFixed(1)}
+            sensors={sensors}
+          />
+        );
+
+      case "data":
+        return (
+          <DataCollection
+            sensors={sensors}
+            traffic={traffic}
+            logs={logs}
+            history={history}
+          />
+        );
+
+      case "detection":
+        return (
+          <CameraFeed
+            traffic={traffic}
+            sensors={sensors}
+            logs={logs}
+          />
+        );
+
+      case "signal":
+        return (
+          <SignalControl
+            traffic={traffic}
+            currentGreen={currentGreen}
+            signalPhase={signalPhase}
+            timer={timer}
+            handleEmergency={handleEmergency}
+            setTraffic={setTraffic}
+          />
+        );
+
+      case "analytics":
+        return (
+          <div className="space-y-6">
+            <Analytics traffic={traffic} history={history} />
+            <AdvancedCharts history={history} />
+            <Heatmap traffic={traffic} />
+            <LiveLogs logs={logs} />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 font-sans selection:bg-cyan-500/30">
-      {/* Background Glows */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-cyan-500/10 blur-[120px]" />
-        <div className="absolute top-[20%] -right-[10%] w-[30%] h-[30%] rounded-full bg-purple-500/10 blur-[120px]" />
+    <div className="flex min-h-screen bg-[#020617] text-white">
+
+      {/* 🧭 SIDEBAR */}
+      <div className="w-64 bg-black/40 p-6 space-y-4 border-r border-white/10">
+
+        <h1 className="text-xl font-bold">Traffic AI</h1>
+
+        {[
+          { id: "dashboard", label: "Dashboard" },
+          { id: "data", label: "Data Collection" },
+          { id: "detection", label: "Detection" },
+          { id: "signal", label: "Signal Control" },
+          { id: "analytics", label: "Analytics" }
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveModule(item.id)}
+            className={`w-full text-left px-4 py-2 rounded-lg ${
+              activeModule === item.id
+                ? "bg-emerald-500/20 text-emerald-400"
+                : "hover:bg-white/10"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+
       </div>
 
-      <div className="relative max-w-7xl mx-auto p-4 md:p-8 space-y-8">
-        {/* Header Section */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-8">
-          <div>
-            <div className="flex items-center gap-2 text-cyan-400 mb-1">
-              <Activity size={18} className="animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-widest">System Live</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-              Smart Traffic <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Control Center</span>
-            </h1>
-          </div>
-          
-          <div className="flex items-center gap-4 bg-white/5 border border-white/10 p-2 rounded-xl backdrop-blur-md">
-             {/* Optional: Add a clock or status pill here */}
-             <div className="px-4 py-2 bg-emerald-500/20 rounded-lg border border-emerald-500/20">
-                <p className="text-emerald-400 text-xs font-bold uppercase">AI Optimization Active</p>
-             </div>
-          </div>
-        </header>
-
-        {/* Main Dashboard Grid */}
-        <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Column: Status & Simulation (8 Units) */}
-          <div className="lg:col-span-8 space-y-8">
-            <Dashboard 
-              traffic={traffic} 
-              currentGreen={currentGreen} 
-              timer={timer} 
-            />
-            
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-1 backdrop-blur-xl">
-               <RoadSimulation 
-                traffic={traffic} 
-                currentGreen={currentGreen} 
-              />
-            </div>
-          </div>
-
-          {/* Right Column: Controls & Lights (4 Units) */}
-          <div className="lg:col-span-4 space-y-8">
-            <TrafficLights currentGreen={currentGreen} />
-            
-            <TrafficControls 
-              addVehicle={addVehicle} 
-              removeVehicle={removeVehicle} 
-              handleEmergency={handleEmergency} 
-            />
-          </div>
-
-          {/* Bottom Row: Analytics (Full Width) */}
-          <div className="lg:col-span-12">
-            <Analytics history={history} />
-          </div>
-        </main>
-
-        <footer className="text-center pt-8 text-slate-500 text-sm border-t border-white/5">
-          © 2026 SmartTraffic OS • Predictive Signal Routing System
-        </footer>
+      {/* 📦 CONTENT */}
+      <div className="flex-1 p-6 overflow-y-auto">
+        {renderModule()}
       </div>
+
     </div>
   );
 }
