@@ -48,7 +48,6 @@ const CameraFeed = ({ traffic, sensors, logs }) => {
 
   return (
     <div className="space-y-8 animate-slide-up">
-      {/* 🚀 AI VISION STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {visionStats.map((stat, i) => (
           <div
@@ -75,7 +74,6 @@ const CameraFeed = ({ traffic, sensors, logs }) => {
         ))}
       </div>
 
-      {/* 🎥 LIVE FEED GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {cameras.map((cam) => {
           const vehicles = traffic[cam.road] || 0;
@@ -84,7 +82,6 @@ const CameraFeed = ({ traffic, sensors, logs }) => {
               key={cam.id}
               className="glass-card overflow-hidden border border-slate-200/60 shadow-xl group"
             >
-              {/* Header */}
               <div className="p-4 bg-slate-900 flex justify-between items-center text-white">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-rose-500 rounded-full animate-ping"></div>
@@ -97,13 +94,10 @@ const CameraFeed = ({ traffic, sensors, logs }) => {
                 </button>
               </div>
 
-              {/* Simulated Video Feed */}
               <div className="relative aspect-video bg-slate-950 flex items-center justify-center overflow-hidden">
-                {/* Overlay: Scanning Lines */}
                 <div className="absolute inset-0 bg-scanline opacity-10 pointer-events-none"></div>
                 <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500/20 animate-scan pointer-events-none"></div>
 
-                {/* Overlay: AI Bounding Boxes (Simulated) */}
                 <div className="absolute inset-0 p-6 grid grid-cols-4 grid-rows-3 gap-4 opacity-40">
                   {Array.from({ length: Math.min(vehicles, 12) }).map(
                     (_, i) => (
@@ -119,7 +113,6 @@ const CameraFeed = ({ traffic, sensors, logs }) => {
                   )}
                 </div>
 
-                {/* Center Badge */}
                 <div className="z-10 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                   <p className="text-xs font-black text-white flex items-center gap-2">
                     <Activity size={12} className="text-emerald-400" />
@@ -128,13 +121,11 @@ const CameraFeed = ({ traffic, sensors, logs }) => {
                   </p>
                 </div>
 
-                {/* Corner Coordinates */}
                 <div className="absolute bottom-4 left-4 font-mono text-[9px] text-white/30">
                   LAT: 28.6139° N <br /> LONG: 77.2090° E
                 </div>
               </div>
 
-              {/* Feed Footer */}
               <div className="p-4 bg-white flex justify-between items-center">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-slate-400 uppercase">
@@ -153,7 +144,6 @@ const CameraFeed = ({ traffic, sensors, logs }) => {
         })}
       </div>
 
-      {/* 📜 DETECTION LOG (MODERN LIST) */}
       <div className="glass-card border border-slate-200/60 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex items-center gap-3">
           <div className="p-2 bg-slate-900 rounded-lg text-white">

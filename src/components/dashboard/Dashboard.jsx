@@ -46,7 +46,6 @@ const Dashboard = ({
 
   return (
     <div className="space-y-8 animate-slide-up">
-      {/* 🚀 STATS ROW */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <div
@@ -69,12 +68,10 @@ const Dashboard = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Graph */}
         <div className="lg:col-span-2">
           <TrafficGraph history={history} />
         </div>
 
-        {/* Signal Side Panel */}
         <div className="lg:col-span-1">
           <SignalOverview
             currentGreen={currentGreen}

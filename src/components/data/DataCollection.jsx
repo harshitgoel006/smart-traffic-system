@@ -41,7 +41,6 @@ const DataCollection = ({ sensors, traffic, logs, history }) => {
 
   return (
     <div className="space-y-8 animate-slide-up">
-      {/* 🚀 NETWORK STATUS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {networkStats.map((stat, i) => (
           <div
@@ -65,7 +64,6 @@ const DataCollection = ({ sensors, traffic, logs, history }) => {
         ))}
       </div>
 
-      {/* 📊 SENSOR NETWORK & LOGS */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2">
           <SensorTable sensors={sensors} />

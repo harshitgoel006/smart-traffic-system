@@ -25,7 +25,6 @@ const Heatmap = ({ traffic }) => {
             key={road}
             className={`relative p-8 rounded-[32px] border-2 transition-all duration-500 overflow-hidden ${getColor(val)}`}
           >
-            {/* Visual Indicator Background */}
             <div className="absolute top-0 right-0 p-4 opacity-10">
               <h1 className="text-6xl font-black">{road}</h1>
             </div>
@@ -38,7 +37,6 @@ const Heatmap = ({ traffic }) => {
               Vehicles
             </p>
 
-            {/* Progress Bar */}
             <div className="mt-6 h-2 w-full bg-black/5 rounded-full overflow-hidden">
               <div
                 className="h-full bg-current opacity-60 rounded-full"
