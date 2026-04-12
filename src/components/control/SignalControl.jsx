@@ -310,3 +310,8 @@ const StatCard = ({ title, value, icon, color }) => {
 import { Activity } from "lucide-react";
 
 export default SignalControl;
+
+
+
+
+
